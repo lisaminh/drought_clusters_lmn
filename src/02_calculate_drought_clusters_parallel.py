@@ -16,6 +16,7 @@ import pickle
 from netCDF4 import Dataset
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+import os
 
 # Import custom libraries
 import drought_clusters_utils as dclib
@@ -64,30 +65,38 @@ metric_var = definitions["metric_var"]
 
 # Path where the drought clusters will be saved
 clusters_partial_path = definitions["clusters_partial_path"]
-clusters_full_path = (
-    clusters_partial_path
-    + "/"
-    + dataset
-    + "/"
-    + region
-    + "/"
-    + drought_metric
-    + "/"
-    + drought_threshold_name
-    + "/"
+clusters_full_path = os.path.join(
+    clusters_partial_path,
+    dataset,
+    region,
+    drought_metric,
+    drought_threshold_name,
+    ""
 )
 
 # Threshold for minimum cluster area (km^2)
 minimum_area_threshold = definitions["minimum_area_threshold"]
 
+# --- ENSURE OUTPUT DIRECTORY EXISTS ---
+if rank -- 0:
+    os.makedirs(clusters_full_path, exist_ok = True)
+comm.Barrier() # Wait for all cores to ensure the directory is created before proceeding
+
 ######################## DONE SETTING PATHS AND DEFINTIONS #######################
 
 # Load the 3D array with the drought metric (t, lat, lon)
-f = Dataset(drought_metric_path + drought_metric_file_name)
+f = Dataset(os.path.join(drought_metric_path, drought_metric_file_name))
 drought_metric = f.variables[metric_var][:]
 lons = f.variables[lon_var][:]
 lats = f.variables[lat_var][:]
 f.close()
+
+# --- (DEBUG 1): INPUT DATA CHECK ---
+# if rank == 0:
+#     print(f"DEBUG 1.1: NetCDF data loaded. Metric shape: {drought_metric.shape}")
+#     print(f"DEBUG 1.2: Files should save to: {clusters_full_path}")
+# comm.Barrier()
+# ----------------------------------
 
 # Set date time objects and the number of time steps
 start_date = datetime(start_year, 1, 1)
@@ -107,7 +116,11 @@ def find_clusters(chunk):
 
     # Length of the chunk
     chunk_length = len(chunk)
-
+    
+    # --- DEBUG 2: LOOP START CHECK ---
+    # print(f"DEBUG 2: Rank {rank} received chunk of size {chunk_length} and is starting loop.")
+    # ----------------------------------
+    
     # Repeat analysis for each time step within the assigned chunck
     for i in range(0, chunk_length):
 
@@ -149,16 +162,20 @@ def find_clusters(chunk):
         # STEP 6: SAVE THE DROUGHT CLUSTERS FOR CURRENT TIME STEP
 
         # Paths and file names for saving data
-        f_name_slice = (
-            clusters_full_path + "cluster-matrix_" + str(current_date) + ".pck"
+        f_name_slice = os.path.join(
+            clusters_full_path , "cluster-matrix_"+ date_str + ".pck"
         )
-        f_name_dictionary = (
-            clusters_full_path + "cluster-dictionary_" + str(current_date) + ".pck"
+        f_name_dictionary = os.path.join(
+            clusters_full_path , "cluster-dictionary_" + date_str + ".pck"
         )
-        f_name_count = (
-            clusters_full_path + "cluster-count_" + str(current_date) + ".pck"
+        f_name_count = os.path.join(
+            clusters_full_path , "cluster-count_" + date_str + ".pck"
         )
 
+        # --- DEBUG 3: PRE-SAVE CHECK ---
+        # print(f"DEBUG 3: Rank {rank} is attempting to save file: {f_name_slice}")
+        # -------------------------------
+        
         # Save the data in pickle format
         pickle.dump(droughts, open(f_name_slice, "wb"), pickle.HIGHEST_PROTOCOL)
         pickle.dump(

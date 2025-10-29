@@ -15,6 +15,7 @@ import pickle
 from netCDF4 import Dataset
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+import os
 
 # Import custom libraries
 import drought_clusters_utils as dclib
@@ -54,17 +55,12 @@ lon_var = definitions["lon_var"]
 
 # Path where the drought clusters will be saved
 clusters_partial_path = definitions["clusters_partial_path"]
-clusters_full_path = (
-    clusters_partial_path
-    + "/"
-    + dataset
-    + "/"
-    + region
-    + "/"
-    + drought_metric
-    + "/"
-    + drought_threshold_name
-    + "/"
+clusters_full_path = os.path.join(
+    clusters_partial_path,
+    dataset ,
+    region,
+    drought_metric,
+    drought_threshold_name
 )
 
 ##################################################################################
@@ -77,7 +73,7 @@ nt = (end_year - start_year + 1) * 12
 end_date = start_date + relativedelta(months=nt - 1)
 
 # Load coordinates
-f = Dataset(drought_metric_path + drought_metric_file_name)
+f = Dataset(os.path.join(drought_metric_path, drought_metric_file_name))
 lons = f.variables[lon_var][:]
 lats = f.variables[lat_var][:]
 f.close()

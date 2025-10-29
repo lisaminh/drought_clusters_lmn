@@ -11,7 +11,7 @@ from netCDF4 import Dataset
 from calendar import monthrange
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
-
+import os
 
 #############################################################################################################
 ######################################### DATA PRE-PROCESSING TOOLS #########################################
@@ -824,13 +824,15 @@ def load_drought_cluster_data(data_path, start_date, tsteps, nlons, nlats):
 
     # Sweep through each date to obtain the data
     current_date = start_date
+    # gets rid of invalid ":" in named files
+    date_str = start_date.strftime("%Y-%m-%d") 
     for i in range(0, tsteps):
         # Data paths for the individual cluster files for the current time step
-        f_name_slice = data_path + "cluster-matrix_" + str(current_date) + ".pck"
-        f_name_dictionary = (
-            data_path + "cluster-dictionary_" + str(current_date) + ".pck"
+        f_name_slice = os.path.join(data_path , "cluster-matrix_" + date_str + ".pck")
+        f_name_dictionary = os.path.join(
+            data_path , "cluster-dictionary_" + date_str + ".pck"
         )
-        f_name_count = data_path + "cluster-count_" + str(current_date) + ".pck"
+        f_name_count = os.path.join(data_path , "cluster-count_" + date_str + ".pck")
 
         # Load current data field, dictionary, and count of drought clusters
         droughts = pickle.load(open(f_name_slice, "rb"))
@@ -880,9 +882,9 @@ def track_clusters_and_save(
     )
 
     # Saving the tracked clusters
-    f_name = (
+    f_name = os.path.join(
         data_path
-        + "tracked_clusters_dictionary_"
+        , "tracked_clusters_dictionary_"
         + str(start_date.year)
         + "-"
         + str(end_date.year)
@@ -898,9 +900,9 @@ def track_clusters_and_save(
         + drought_threshold
         + " threshold."
     )
-    fname = (
+    fname = os.path.join(
         data_path
-        + "drought_clusters_"
+        , "drought_clusters_"
         + dataset
         + "_"
         + drought_threshold
