@@ -126,7 +126,7 @@ def find_clusters(chunk):
 
         # Current date
         current_date = start_date + relativedelta(months=int(chunk[i]))
-
+        date_str = start_date.strftime("%Y-%m-%d") 
         # STEP 1: GET DATA FOR THE CURRENT TIME STEP
         current_data_slice = drought_metric[int(chunk[i]), :, :]
 

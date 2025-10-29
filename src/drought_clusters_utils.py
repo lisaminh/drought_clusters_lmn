@@ -549,7 +549,7 @@ def find_drought_clusters(
     idx_lat, idx_lon = np.where(np.isfinite(data_matrix))
 
     # Link them so they become coordinates
-    linked_indices = zip(idx_lat, idx_lon)
+    linked_indices = list(zip(idx_lat, idx_lon))
 
     # Number of pixels under drought
     npixels = len(idx_lat)
