@@ -11,7 +11,7 @@ Written by Julio E. Herrera Estrada, Ph.D.
 # Import Python libraries
 import yaml
 import numpy as np
-import cPickle as pickle
+import pickle
 from netCDF4 import Dataset
 from datetime import datetime
 from dateutil.relativedelta import relativedelta

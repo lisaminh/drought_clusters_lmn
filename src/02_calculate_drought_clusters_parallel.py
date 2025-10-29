@@ -12,7 +12,7 @@ Written by Julio E. Herrera Estrada, Ph.D.
 import yaml
 import numpy as np
 from mpi4py import MPI
-import cPickle as pickle
+import pickle
 from netCDF4 import Dataset
 from datetime import datetime
 from dateutil.relativedelta import relativedelta

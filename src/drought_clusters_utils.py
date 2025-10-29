@@ -6,7 +6,7 @@ Written by Julio E. Herrera Estrada, Ph.D.
 
 # Import libraries
 import numpy as np
-import cPickle as pickle
+import pickle
 from netCDF4 import Dataset
 from calendar import monthrange
 from datetime import timedelta
