@@ -27,7 +27,7 @@ end_year: 2020
 drought_threshold: -0.5
 
 # Threshold for minimum cluster area (km^2)
-minimum_area_threshold: 10000
+minimum_area_threshold: 10
 
 # Set boolean variable of whether to treat the right/left edges of the map as periodic
 periodic_bool: False

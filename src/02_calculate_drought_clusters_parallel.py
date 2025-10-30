@@ -17,6 +17,7 @@ from netCDF4 import Dataset
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import os
+import pdb
 
 # Import custom libraries
 import drought_clusters_utils as dclib
@@ -78,7 +79,7 @@ clusters_full_path = os.path.join(
 minimum_area_threshold = definitions["minimum_area_threshold"]
 
 # --- ENSURE OUTPUT DIRECTORY EXISTS ---
-if rank -- 0:
+if rank == 0:
     os.makedirs(clusters_full_path, exist_ok = True)
 comm.Barrier() # Wait for all cores to ensure the directory is created before proceeding
 
@@ -91,12 +92,14 @@ lons = f.variables[lon_var][:]
 lats = f.variables[lat_var][:]
 f.close()
 
-# --- (DEBUG 1): INPUT DATA CHECK ---
-if rank == 0:
-    print(f"DEBUG 1.1: NetCDF data loaded. Metric shape: {drought_metric.shape}")
-    print(f"DEBUG 1.2: Files should save to: {clusters_full_path}")
-comm.Barrier()
-# ----------------------------------
+# # --- (DEBUG 1): INPUT DATA CHECK ---
+# if rank == 0:
+#     print(f"DEBUG 1.A (Data Input): Metric shape: {drought_metric.shape}")
+#     print(f"DEBUG 1.B (Metrics): Data Max value: {np.nanmax(drought_metric)}", flush=True)
+#     print(f"DEBUG 1.C (Metrics): Data Min value: {np.nanmin(drought_metric)}", flush=True)
+#     print(f"DEBUG 1.D (Metrics): Count of NaN: {np.count_nonzero(np.isnan(drought_metric))}", flush=True)
+# comm.Barrier()
+# # ----------------------------------
 
 # Set date time objects and the number of time steps
 start_date = datetime(start_year, 1, 1)
@@ -104,8 +107,8 @@ nsteps = (end_year - start_year + 1) * 12
 date_temp = start_date
 
 # Spatial resolution of dataset in each direction
-resolution_lon = np.mean(lons[1:] - lons[:-1])
-resolution_lat = np.mean(lats[1:] - lats[:-1])
+resolution_lon = np.abs(np.mean(lons[1:] - lons[:-1]))
+resolution_lat = np.abs(np.mean(lats[1:] - lats[:-1]))
 
 ##################################################################################
 #################### IDENTIFY DROUGHT CLUSTERS (PER TIME STEP) ###################
@@ -117,50 +120,84 @@ def find_clusters(chunk):
     # Length of the chunk
     chunk_length = len(chunk)
     
-    # --- DEBUG 2: LOOP START CHECK ---
-    print(f"DEBUG 2: Rank {rank} received chunk of size {chunk_length} and is starting loop.")
-    # ----------------------------------
+    # # --- (DEBUG 2): LOOP START CHECK ---
+    # print(f"DEBUG 2: Rank {rank} received chunk of size {chunk_length} and is starting loop.")
+    # # ----------------------------------
     
     # Repeat analysis for each time step within the assigned chunck
     for i in range(0, chunk_length):
-
         # Current date
         current_date = start_date + relativedelta(months=int(chunk[i]))
         date_str = current_date.strftime("%Y-%m-%d") 
         # STEP 1: GET DATA FOR THE CURRENT TIME STEP
         current_data_slice = drought_metric[int(chunk[i]), :, :]
-
+        
         # STEP 2: APPLY MEDIAN FILTER TO THE TIME STEP IN EACH FIELD TO SMOOTH OUT NOISE
-        filtered_slice = dclib.median_filter(current_data_slice)
-
+        # filtered_slice = dclib.median_filter(current_data_slice)
+        filtered_slice = current_data_slice
+        
         # STEP 3: APPLY DROUGHT THRESHOLD DEFINITION (e.g. 20th percentile)
         droughts = dclib.filter_non_droughts(filtered_slice, drought_threshold)
 
+        # --- (DEBUG 3): DROUGHT PIXEL COUNT ---
+        num_drought_pixels = np.count_nonzero(~np.isnan(droughts))
+        if rank == 0:
+             print(f"DEBUG 3: Rank {rank}, DATE: {date_str} - DROUGHT PIXELS (Finite), {num_drought_pixels}", flush=True)
+        # --------------------------------------
+        
         # STEP 4: IDENTIFY DROUGHT CLUSTERS PER TIME STEP
-        print(
-            "Rank "
-            + str(rank + 1)
-            + ": Identifying clusters for time step "
-            + str(int(chunk[i]) + 1)
-            + " of "
-            + str(nsteps)
-            + " ("
-            + str(i + 1)
-            + "/"
-            + str(chunk_length)
-            + ")..."
-        )
-        cluster_count, cluster_dictionary = dclib.find_drought_clusters(
+        # print(
+        #     "Rank "
+        #     + str(rank + 1)
+        #     + ": Identifying clusters for time step "
+        #     + str(int(chunk[i]) + 1)
+        #     + " of "
+        #     + str(nsteps)
+        #     + " ("
+        #     + str(i + 1)
+        #     + "/"
+        #     + str(chunk_length)
+        #     + ")..."
+        # )
+        cluster_count_orig, cluster_dictionary = dclib.find_drought_clusters(
             droughts, lons, lats, resolution_lon, resolution_lat, periodic_bool
         )
+        
+        # --- (DEBUG) 4.A: CLUSTER COUNT AFTER FIND BEFORE FILTER---
+        if rank == 0:
+            print(f"DEBUG 4.A: Rank {rank}, Clusters Found (Initial Count), {cluster_count_orig}")
+            print(f"DEBUG 4.5.Rank {rank}: --- DATA BEFORE FILTER: {date_str} ---", flush=True)
+            print(f"DEBUG 4.5.Rank {rank}: 'droughts' (Input Data Mask) Shape: {droughts.shape}", flush=True)
+            # FIX for AttributeError: Check if cluster_count_orig is a numpy array before accessing .shape
+            if isinstance(cluster_count_orig, np.ndarray):
+                print(f"DEBUG 4.5.Rank {rank}: 'cluster_count_orig' (Cluster IDs) Shape: {cluster_count_orig.shape}", flush=True)
+            else:
+                print(f"DEBUG 4.5.Rank {rank}: 'cluster_count_orig' is type {type(cluster_count_orig).__name__} \
+                    (Value: {cluster_count_orig}). Cannot check shape.",flush=True)
+                
+            print(f"DEBUG 4.5.Rank {rank}: Minimum Area Threshold: {minimum_area_threshold:.2f} km^2", flush=True)
+            print(f"DEBUG 4.5.Rank {rank}: 'cluster_dictionary' (Cluster Properties):", flush=True)
+            
+            # Print cluster properties, focusing on the calculated area
+            for k, v in cluster_dictionary.items():
+                area = v.get('area', 0.0)
+                lat = v.get('centroid_lat', 'N/A')
+                lon = v.get('centroid_lon', 'N/A')
+                print(f"DEBUG 4.5.Rank {rank}:   Cluster {k} (Area): {area} km^2, Centroid: ({lat}, {lon})", flush=True)
+            print(f"DEBUG 4.5.Rank {rank}: ---------------------------------------", flush=True)
+        # ------------------------------------------
 
         # STEP 5: FILTER DROUGHT CLUSTERS BY AREA AND IF THE CENTROID LIES IN THE SAHARA
         droughts, cluster_count, cluster_dictionary = dclib.filter_drought_clusters(
-            droughts, cluster_count, cluster_dictionary, minimum_area_threshold
+            droughts, cluster_count_orig, cluster_dictionary, minimum_area_threshold
         )
 
+        # --- (DEBUG) 4.B: CLUSTER COUNT AFTER FILTER ---
+        if rank == 0:
+            print(f"DEBUG 4.B: Rank {rank}: Clusters Remaining (Post-Filter Count): {cluster_count}")
+        # ---------------------------------------------
+        
         # STEP 6: SAVE THE DROUGHT CLUSTERS FOR CURRENT TIME STEP
-
         # Paths and file names for saving data
         f_name_slice = os.path.join(
             clusters_full_path , "cluster-matrix_"+ date_str + ".pck"
@@ -172,29 +209,40 @@ def find_clusters(chunk):
             clusters_full_path , "cluster-count_" + date_str + ".pck"
         )
 
-        # --- DEBUG 3: PRE-SAVE CHECK ---
-        print(f"DEBUG 3: Rank {rank} is attempting to save file: {f_name_slice}")
-        # -------------------------------
+        # # --- (DEBUG) 5: CHECK THRESHOLD CRITERIA ---
+        # print(f"DEBUG 5.Rank {rank}: Slice Max (Raw): {np.nanmax(current_data_slice)}")
+        # print(f"DEBUG 5.Rank {rank}: Slice Min (Raw): {np.nanmin(current_data_slice)}")
+        # print(f"DEBUG 5.Rank {rank}: Threshold: {drought_threshold}")
         
+        # Check the output of the filtering step, 'droughts', which is about to be saved
+        num_drought_pixels = np.count_nonzero(~np.isnan(droughts))
+        if rank == 0:
+            print(f"DEBUG 5.Rank {rank}: DATE: {date_str} - DROUGHT PIXELS (Finite): {num_drought_pixels}", flush=True)
+        # -------------------------------
+
+        # # --- (DEBUG) 6: PRE-SAVE CHECK ---
+        # print(f"DEBUG 6: Rank {rank} is attempting to save file: {f_name_slice}")
+        # # -------------------------------
+                
         # Save the data in pickle format
         pickle.dump(droughts, open(f_name_slice, "wb"), pickle.HIGHEST_PROTOCOL)
         pickle.dump(
             cluster_dictionary, open(f_name_dictionary, "wb"), pickle.HIGHEST_PROTOCOL
         )
         pickle.dump(cluster_count, open(f_name_count, "wb"), pickle.HIGHEST_PROTOCOL)
-        print(
-            "Rank "
-            + str(rank + 1)
-            + ": Saved data for time step "
-            + str(int(chunk[i]) + 1)
-            + " of "
-            + str(nsteps)
-            + " ("
-            + str(i + 1)
-            + "/"
-            + str(chunk_length)
-            + ")."
-        )
+        # print(
+        #     "Rank "
+        #     + str(rank + 1)
+        #     + ": Saved data for time step "
+        #     + str(int(chunk[i]) + 1)
+        #     + " of "
+        #     + str(nsteps)
+        #     + " ("
+        #     + str(i + 1)
+        #     + "/"
+        #     + str(chunk_length)
+        #     + ")."
+        # )
 
     return
 

@@ -12,6 +12,7 @@ from calendar import monthrange
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 import os
+import pdb
 
 #############################################################################################################
 ######################################### DATA PRE-PROCESSING TOOLS #########################################
@@ -279,7 +280,6 @@ def filter_non_droughts(data_matrix, threshold):
     - droughts_matrix: 2D matrix of the same dimensions and orientation as the input matrix but where
                         all the grid cells that have values above the threshold are filtered out.
     """
-
     # Ignore floating-point errors
     np.seterr(invalid="ignore")
 
