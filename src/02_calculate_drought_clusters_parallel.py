@@ -139,11 +139,11 @@ def find_clusters(chunk):
         # STEP 3: APPLY DROUGHT THRESHOLD DEFINITION (e.g. 20th percentile)
         droughts = dclib.filter_non_droughts(filtered_slice, drought_threshold)
 
-        # --- (DEBUG 3): DROUGHT PIXEL COUNT ---
-        num_drought_pixels = np.count_nonzero(~np.isnan(droughts))
-        if rank == 0:
-             print(f"DEBUG 3: Rank {rank}, DATE: {date_str} - DROUGHT PIXELS (Finite), {num_drought_pixels}", flush=True)
-        # --------------------------------------
+        # # --- (DEBUG 3): DROUGHT PIXEL COUNT ---
+        # num_drought_pixels = np.count_nonzero(~np.isnan(droughts))
+        # if rank == 0:
+        #      print(f"DEBUG 3: Rank {rank}, DATE: {date_str} - DROUGHT PIXELS (Finite), {num_drought_pixels}", flush=True)
+        # # --------------------------------------
         
         # STEP 4: IDENTIFY DROUGHT CLUSTERS PER TIME STEP
         # print(
@@ -163,39 +163,30 @@ def find_clusters(chunk):
             droughts, lons, lats, resolution_lon, resolution_lat, periodic_bool
         )
         
-        # --- (DEBUG) 4.A: CLUSTER COUNT AFTER FIND BEFORE FILTER---
-        if rank == 0:
-            print(f"DEBUG 4.A: Rank {rank}, Clusters Found (Initial Count), {cluster_count_orig}")
-            print(f"DEBUG 4.5.Rank {rank}: --- DATA BEFORE FILTER: {date_str} ---", flush=True)
-            print(f"DEBUG 4.5.Rank {rank}: 'droughts' (Input Data Mask) Shape: {droughts.shape}", flush=True)
-            # FIX for AttributeError: Check if cluster_count_orig is a numpy array before accessing .shape
-            if isinstance(cluster_count_orig, np.ndarray):
-                print(f"DEBUG 4.5.Rank {rank}: 'cluster_count_orig' (Cluster IDs) Shape: {cluster_count_orig.shape}", flush=True)
-            else:
-                print(f"DEBUG 4.5.Rank {rank}: 'cluster_count_orig' is type {type(cluster_count_orig).__name__} \
-                    (Value: {cluster_count_orig}). Cannot check shape.",flush=True)
-                
-            print(f"DEBUG 4.5.Rank {rank}: Minimum Area Threshold: {minimum_area_threshold:.2f} km^2", flush=True)
-            print(f"DEBUG 4.5.Rank {rank}: 'cluster_dictionary' (Cluster Properties):", flush=True)
+        # # --- (DEBUG) 4.A: CLUSTER COUNT AFTER FIND BEFORE FILTER---
+        # if rank == 0:
+        #     print(f"DEBUG 4.A.Rank {rank}: --- DATA BEFORE FILTER: {date_str} ---", flush=True)
+        #     print(f"DEBUG 4.A: Rank {rank}, Clusters Found (Initial Count), {cluster_count_orig}")
+        #     print(f"DEBUG 4.A.Rank {rank}: 'droughts' (Input Data Mask) Shape: {droughts.shape}", flush=True)
+        #     print(f"DEBUG 4.5.Rank {rank}: 'cluster_dictionary' (Cluster Properties):", flush=True)
             
-            # Print cluster properties, focusing on the calculated area
-            for k, v in cluster_dictionary.items():
-                area = v.get('area', 0.0)
-                lat = v.get('centroid_lat', 'N/A')
-                lon = v.get('centroid_lon', 'N/A')
-                print(f"DEBUG 4.5.Rank {rank}:   Cluster {k} (Area): {area} km^2, Centroid: ({lat}, {lon})", flush=True)
-            print(f"DEBUG 4.5.Rank {rank}: ---------------------------------------", flush=True)
-        # ------------------------------------------
+        #     # Print cluster properties, focusing on the calculated area
+        #     for k, v in cluster_dictionary.items():
+        #         area = v.get('area', 0.0)
+        #         lat, lon = v.get('centroid', ('N/A', 'N/A'))
+        #         print(f"  DEBUG 4.5.Rank {rank}:   Cluster {k} (Area): {area} km^2, Centroid: ({lat}, {lon})", flush=True)
+        #     print(f"  DEBUG 4.5.Rank {rank}: ---------------------------------------", flush=True)
+        # # ------------------------------------------
 
         # STEP 5: FILTER DROUGHT CLUSTERS BY AREA AND IF THE CENTROID LIES IN THE SAHARA
         droughts, cluster_count, cluster_dictionary = dclib.filter_drought_clusters(
             droughts, cluster_count_orig, cluster_dictionary, minimum_area_threshold
         )
 
-        # --- (DEBUG) 4.B: CLUSTER COUNT AFTER FILTER ---
-        if rank == 0:
-            print(f"DEBUG 4.B: Rank {rank}: Clusters Remaining (Post-Filter Count): {cluster_count}")
-        # ---------------------------------------------
+        # # --- (DEBUG) 4.B: CLUSTER COUNT AFTER FILTER ---
+        # if rank == 0:
+        #     print(f"DEBUG 4.B: Rank {rank}: Clusters Remaining (Post-Filter Count): {cluster_count}")
+        # # ---------------------------------------------
         
         # STEP 6: SAVE THE DROUGHT CLUSTERS FOR CURRENT TIME STEP
         # Paths and file names for saving data
@@ -214,11 +205,11 @@ def find_clusters(chunk):
         # print(f"DEBUG 5.Rank {rank}: Slice Min (Raw): {np.nanmin(current_data_slice)}")
         # print(f"DEBUG 5.Rank {rank}: Threshold: {drought_threshold}")
         
-        # Check the output of the filtering step, 'droughts', which is about to be saved
-        num_drought_pixels = np.count_nonzero(~np.isnan(droughts))
-        if rank == 0:
-            print(f"DEBUG 5.Rank {rank}: DATE: {date_str} - DROUGHT PIXELS (Finite): {num_drought_pixels}", flush=True)
-        # -------------------------------
+        # # Check the output of the filtering step, 'droughts', which is about to be saved
+        # num_drought_pixels = np.count_nonzero(~np.isnan(droughts))
+        # if rank == 0:
+        #     print(f"DEBUG 5.Rank {rank}: DATE: {date_str} - DROUGHT PIXELS (Finite): {num_drought_pixels}", flush=True)
+        # # -------------------------------
 
         # # --- (DEBUG) 6: PRE-SAVE CHECK ---
         # print(f"DEBUG 6: Rank {rank} is attempting to save file: {f_name_slice}")

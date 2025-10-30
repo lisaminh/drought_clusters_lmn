@@ -1088,7 +1088,7 @@ def track_clusters(drought_cluster_dictionary, drought_matrix, start_date, end_d
                 # Calculate the overlap of the current and future cluster coordinates
                 overlap = len(
                     current_cluster_coordinates & future_cluster_coordinates
-                ) / np.float(len(current_cluster_coordinates))
+                ) / float(len(current_cluster_coordinates))
 
                 # Linking the clusters from both time steps with graphs
                 if overlap > 0.0:

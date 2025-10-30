@@ -24,10 +24,10 @@ start_year: 1999
 end_year: 2020
 
 # Threshold for drought definition (if using percentiles, 0.2 corresponds to 20th percentile)
-drought_threshold: -0.5
+drought_threshold: -1
 
 # Threshold for minimum cluster area (km^2)
-minimum_area_threshold: 10
+minimum_area_threshold: 5000
 
 # Set boolean variable of whether to treat the right/left edges of the map as periodic
 periodic_bool: False
