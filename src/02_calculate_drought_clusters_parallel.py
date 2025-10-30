@@ -92,10 +92,10 @@ lats = f.variables[lat_var][:]
 f.close()
 
 # --- (DEBUG 1): INPUT DATA CHECK ---
-# if rank == 0:
-#     print(f"DEBUG 1.1: NetCDF data loaded. Metric shape: {drought_metric.shape}")
-#     print(f"DEBUG 1.2: Files should save to: {clusters_full_path}")
-# comm.Barrier()
+if rank == 0:
+    print(f"DEBUG 1.1: NetCDF data loaded. Metric shape: {drought_metric.shape}")
+    print(f"DEBUG 1.2: Files should save to: {clusters_full_path}")
+comm.Barrier()
 # ----------------------------------
 
 # Set date time objects and the number of time steps
@@ -118,7 +118,7 @@ def find_clusters(chunk):
     chunk_length = len(chunk)
     
     # --- DEBUG 2: LOOP START CHECK ---
-    # print(f"DEBUG 2: Rank {rank} received chunk of size {chunk_length} and is starting loop.")
+    print(f"DEBUG 2: Rank {rank} received chunk of size {chunk_length} and is starting loop.")
     # ----------------------------------
     
     # Repeat analysis for each time step within the assigned chunck
@@ -126,7 +126,7 @@ def find_clusters(chunk):
 
         # Current date
         current_date = start_date + relativedelta(months=int(chunk[i]))
-        date_str = start_date.strftime("%Y-%m-%d") 
+        date_str = current_date.strftime("%Y-%m-%d") 
         # STEP 1: GET DATA FOR THE CURRENT TIME STEP
         current_data_slice = drought_metric[int(chunk[i]), :, :]
 
@@ -173,7 +173,7 @@ def find_clusters(chunk):
         )
 
         # --- DEBUG 3: PRE-SAVE CHECK ---
-        # print(f"DEBUG 3: Rank {rank} is attempting to save file: {f_name_slice}")
+        print(f"DEBUG 3: Rank {rank} is attempting to save file: {f_name_slice}")
         # -------------------------------
         
         # Save the data in pickle format

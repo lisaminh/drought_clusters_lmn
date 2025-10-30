@@ -825,7 +825,7 @@ def load_drought_cluster_data(data_path, start_date, tsteps, nlons, nlats):
     # Sweep through each date to obtain the data
     current_date = start_date
     # gets rid of invalid ":" in named files
-    date_str = start_date.strftime("%Y-%m-%d") 
+    date_str = current_date.strftime("%Y-%m-%d") 
     for i in range(0, tsteps):
         # Data paths for the individual cluster files for the current time step
         f_name_slice = os.path.join(data_path , "cluster-matrix_" + date_str + ".pck")

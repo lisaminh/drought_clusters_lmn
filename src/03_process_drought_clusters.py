@@ -38,7 +38,7 @@ region = definitions["region"]
 drought_metric = definitions["drought_metric"]
 
 # Threshold for drought definition
-drought_threshold = definitions["drought_threshold"]
+drought_threshold = float(definitions["drought_threshold"])
 drought_threshold_name = str(drought_threshold)
 
 # Start and end years for the timer period for which we will identify the drought clusters
@@ -62,6 +62,10 @@ clusters_full_path = os.path.join(
     drought_metric,
     drought_threshold_name
 )
+
+# --- DEBUG IN 03_process_drought_clusters.py ---
+print(f"DEBUG 03: Expected input path is: {clusters_full_path}")
+# -----------------------------------------------------------
 
 ##################################################################################
 ####################### TRACK DROUGHT CLUSTERS THROUGH TIME ######################
