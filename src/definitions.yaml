@@ -24,7 +24,7 @@ start_year: 1999
 end_year: 2020
 
 # Threshold for drought definition (if using percentiles, 0.2 corresponds to 20th percentile)
-drought_threshold: -1
+drought_threshold: -1.0
 
 # Threshold for minimum cluster area (km^2)
 minimum_area_threshold: 5000

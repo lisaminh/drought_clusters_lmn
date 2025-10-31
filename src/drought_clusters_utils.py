@@ -824,9 +824,9 @@ def load_drought_cluster_data(data_path, start_date, tsteps, nlons, nlats):
 
     # Sweep through each date to obtain the data
     current_date = start_date
-    # gets rid of invalid ":" in named files
-    date_str = current_date.strftime("%Y-%m-%d") 
+
     for i in range(0, tsteps):
+        date_str = current_date.strftime("%Y-%m-%d")
         # Data paths for the individual cluster files for the current time step
         f_name_slice = os.path.join(data_path , "cluster-matrix_" + date_str + ".pck")
         f_name_dictionary = os.path.join(
@@ -834,6 +834,10 @@ def load_drought_cluster_data(data_path, start_date, tsteps, nlons, nlats):
         )
         f_name_count = os.path.join(data_path , "cluster-count_" + date_str + ".pck")
 
+        # # --- (DEBUG): IS SCRIPT 03 LOADING IN ALL FILES?  ---
+        # print(f"Loading file: {f_name_dictionary}")
+        # # -------------------------------------
+        
         # Load current data field, dictionary, and count of drought clusters
         droughts = pickle.load(open(f_name_slice, "rb"))
         cluster_dictionary = pickle.load(open(f_name_dictionary, "rb"))
