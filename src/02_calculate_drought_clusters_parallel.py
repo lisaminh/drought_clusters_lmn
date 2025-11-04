@@ -30,7 +30,7 @@ size = comm.Get_size()
 ##################################################################################
 ############################ SET PATHS AND DEFINITIONS ###########################
 ##################################################################################
-
+print("opening yaml", flush = True)
 # Load all the definitions needed to run this file
 with open("definitions.yaml") as f:
     definitions = yaml.load(f, Loader=yaml.FullLoader)
@@ -84,7 +84,7 @@ if rank == 0:
 comm.Barrier() # Wait for all cores to ensure the directory is created before proceeding
 
 ######################## DONE SETTING PATHS AND DEFINTIONS #######################
-
+print("opening file")
 # Load the 3D array with the drought metric (t, lat, lon)
 f = Dataset(os.path.join(drought_metric_path, drought_metric_file_name))
 drought_metric = f.variables[metric_var][:]
@@ -92,14 +92,14 @@ lons = f.variables[lon_var][:]
 lats = f.variables[lat_var][:]
 f.close()
 
-# # --- (DEBUG 1): INPUT DATA CHECK ---
-# if rank == 0:
-#     print(f"DEBUG 1.A (Data Input): Metric shape: {drought_metric.shape}")
-#     print(f"DEBUG 1.B (Metrics): Data Max value: {np.nanmax(drought_metric)}", flush=True)
-#     print(f"DEBUG 1.C (Metrics): Data Min value: {np.nanmin(drought_metric)}", flush=True)
-#     print(f"DEBUG 1.D (Metrics): Count of NaN: {np.count_nonzero(np.isnan(drought_metric))}", flush=True)
-# comm.Barrier()
-# # ----------------------------------
+# --- (DEBUG 1): INPUT DATA CHECK ---
+if rank == 0:
+    print(f"DEBUG 1.A (Data Input): Metric shape: {drought_metric.shape}")
+    print(f"DEBUG 1.B (Metrics): Data Max value: {np.nanmax(drought_metric)}", flush=True)
+    print(f"DEBUG 1.C (Metrics): Data Min value: {np.nanmin(drought_metric)}", flush=True)
+    print(f"DEBUG 1.D (Metrics): Count of NaN: {np.count_nonzero(np.isnan(drought_metric))}", flush=True)
+comm.Barrier()
+# ----------------------------------
 
 # Set date time objects and the number of time steps
 start_date = datetime(start_year, 1, 1)
@@ -120,9 +120,9 @@ def find_clusters(chunk):
     # Length of the chunk
     chunk_length = len(chunk)
     
-    # # --- (DEBUG 2): LOOP START CHECK ---
-    # print(f"DEBUG 2: Rank {rank} received chunk of size {chunk_length} and is starting loop.")
-    # # ----------------------------------
+    # --- (DEBUG 2): LOOP START CHECK ---
+    print(f"DEBUG 2: Rank {rank} received chunk of size {chunk_length} and is starting loop.")
+    # ----------------------------------
     
     # Repeat analysis for each time step within the assigned chunck
     for i in range(0, chunk_length):
@@ -139,11 +139,11 @@ def find_clusters(chunk):
         # STEP 3: APPLY DROUGHT THRESHOLD DEFINITION (e.g. 20th percentile)
         droughts = dclib.filter_non_droughts(filtered_slice, drought_threshold)
 
-        # # --- (DEBUG 3): DROUGHT PIXEL COUNT ---
-        # num_drought_pixels = np.count_nonzero(~np.isnan(droughts))
-        # if rank == 0:
-        #      print(f"DEBUG 3: Rank {rank}, DATE: {date_str} - DROUGHT PIXELS (Finite), {num_drought_pixels}", flush=True)
-        # # --------------------------------------
+        # --- (DEBUG 3): DROUGHT PIXEL COUNT ---
+        num_drought_pixels = np.count_nonzero(~np.isnan(droughts))
+        if rank == 0:
+             print(f"DEBUG 3: Rank {rank}, DATE: {date_str} - DROUGHT PIXELS (Finite), {num_drought_pixels}", flush=True)
+        # --------------------------------------
         
         # STEP 4: IDENTIFY DROUGHT CLUSTERS PER TIME STEP
         # print(
@@ -211,9 +211,9 @@ def find_clusters(chunk):
         #     print(f"DEBUG 5.Rank {rank}: DATE: {date_str} - DROUGHT PIXELS (Finite): {num_drought_pixels}", flush=True)
         # # -------------------------------
 
-        # # --- (DEBUG) 6: PRE-SAVE CHECK ---
-        # print(f"DEBUG 6: Rank {rank} is attempting to save file: {f_name_slice}")
-        # # -------------------------------
+        # --- (DEBUG) 6: PRE-SAVE CHECK ---
+        print(f"DEBUG 6: Rank {rank} is attempting to save file: {f_name_slice}")
+        # -------------------------------
                 
         # Save the data in pickle format
         pickle.dump(droughts, open(f_name_slice, "wb"), pickle.HIGHEST_PROTOCOL)
