@@ -11,7 +11,7 @@ region: CONUS
 drought_metric: SPEI
 
 # Path and file name of the NetCDF file with the drought metric (include '.nc')
-drought_metric_path: 'C:/Users/lisaminh/Documents/data/temporary_files' # wsl directory -> '/mnt/c/Users/lisaminh/My Documents/data/temporary_files/'
+drought_metric_path: 'C:/Users/lisaminh/Documents/data/temporary_files/spatial_extent/' # wsl directory -> '/mnt/c/Users/lisaminh/My Documents/data/temporary_files/'
 drought_metric_file_name: '12mo_SPEI_PRISM_1999-2020_coarsened.nc'
 
 # Names of the variables in the NetCDF file with the drought metric
@@ -37,7 +37,7 @@ periodic_bool: False
 #       clusters_full_path = clusters_partial_path/dataset/region/drought_metric/drought_threshold/
 # This will allow for easy organization if clusters are calculated for multiple datasets,
 # regions, variables, and drought thresholds.
-clusters_partial_path: 'C:/Users/lisaminh/Documents/data/temporary_files/clusters_partial_path'
+clusters_partial_path: 'C:/Users/lisaminh/Documents/data/temporary_files/spatial_extent/clusters_partial_path'
 # wsl directory
 # /mnt/c/Users/lisaminh/My Documents/data/temporary_files/clusters_partial_path'
 
